@@ -625,7 +625,7 @@ body::before{
         <div class="logged-dot"></div>
         <div class="logged-text" id="logged-email"></div>
       </div>
-      <label class="field-label" for="line-name">LINEオープンチャットのニックネーム</label>
+      <label class="field-label" for="line-name">ニックネーム</label>
       <input class="text-input" id="line-name" type="text" placeholder="コミュニティでのお名前" maxlength="30" oninput="checkName()"/>
       <button class="primary-btn" id="start-btn" onclick="startQuiz()" disabled>クイズをスタート →</button>
     </div>
@@ -998,7 +998,7 @@ async function startQuiz() {
         buildQuiz(answers.some(a => a !== null));
         show('s-quiz');
       } else {
-        alert('このクイズは既に別の端末で開始されています。\n最初に参加した端末・ブラウザから続きをお進みください。\n\n解決しない場合はLINEオープンチャットで運営にご連絡ください。');
+        alert('このクイズは既に別の端末で開始されています。\n最初に参加した端末・ブラウザから続きをお進みください。\n\n解決しない場合は運営にご連絡ください。');
       }
     } else if (code === 'http_error') {
       alert('通信に失敗しました。インターネット接続を確認して、もう一度お試しください。');
@@ -1240,9 +1240,9 @@ async function issueLotteryNumber() {
       formBtn.disabled = true;
       helpEl.style.display = 'block';
       if (code === 'lock_timeout' || code === 'json_error' || code === 'http_error') {
-        helpEl.textContent = '時間をおいて再試行してください。解決しない場合は、LINEオープンチャットで運営にご連絡ください。';
+        helpEl.textContent = '時間をおいて再試行してください。解決しない場合は、運営にご連絡ください。';
       } else {
-        helpEl.textContent = '再試行しても解決しない場合は、LINEオープンチャットで運営にご連絡ください。';
+        helpEl.textContent = '再試行しても解決しない場合は、運営にご連絡ください。';
       }
     }
   }
