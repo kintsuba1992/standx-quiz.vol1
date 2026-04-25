@@ -60,7 +60,7 @@ body::before{
    ============================================================ */
 .header-logo{
   display:block;
-  width:180px;
+  width:100%;
   margin:0 auto 1.25rem;
 }
 .header-sub{
@@ -416,6 +416,15 @@ body::before{
 .score-badge .name{font-size:14px;font-weight:600;color:var(--text)}
 .score-badge .score{font-size:22px;font-weight:700;color:var(--accent)}
 .score-badge .note{font-size:11px;color:var(--text-dim);margin-top:2px}
+.lottery-inline{margin:12px 0 8px;}
+.lottery-inline-label{
+  font-size:10px;
+  color:var(--text-dim);
+  font-weight:600;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
 
 /* Lottery */
 .lottery-box{
@@ -646,6 +655,13 @@ body::before{
       <div class="score-badge" id="score-badge">
         <div class="name" id="score-name"></div>
         <div class="score" id="score-num"></div>
+        <div class="lottery-inline">
+          <div class="lottery-inline-label">あなたの宝くじ番号</div>
+          <div class="lottery-digits" id="lottery-digits"></div>
+          <div class="lottery-status loading" id="lottery-status">番号を発行中...</div>
+          <div class="lottery-status-help" id="lottery-status-help"></div>
+          <button class="lottery-retry" id="lottery-retry" onclick="retryIssue()">再試行</button>
+        </div>
         <div class="note">※ 正誤数にかかわらず、回答完了で全員が抽選対象です。</div>
       </div>
 
@@ -678,15 +694,6 @@ body::before{
           という循環が成立します。</p>
         <p class="summary-body">ただしこの構造は、出来高やFunding環境に依存するため、利回りは固定ではなく変動します。</p>
         <p class="summary-body">つまりStandXは単なる高利回りプロダクトではなく、<strong>資本の使い方を再設計し、市場参加と収益を一体化させた構造を持つプロトコル</strong>です。</p>
-      </div>
-
-      <div class="lottery-box">
-        <div class="lottery-label">あなたの宝くじ番号</div>
-        <div class="lottery-digits" id="lottery-digits"></div>
-        <div class="lottery-note">イベント終了後に当選番号を発表します</div>
-        <div class="lottery-status loading" id="lottery-status">番号を発行中...</div>
-        <div class="lottery-status-help" id="lottery-status-help"></div>
-        <button class="lottery-retry" id="lottery-retry" onclick="retryIssue()">再試行</button>
       </div>
 
       <div class="screenshot-notice">
@@ -751,26 +758,26 @@ const STORAGE_VERSION = 1;
 // 問題データ
 // =============================================================================
 const QS = [
-  { questionId:'q01', q:'DUSDは、保有しているだけで利回りが発生する？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'A', fb:{ok:'✅ 正解！DUSDはウォレットに保有しているだけで利回りが発生する設計です。ステーキングやロック操作は不要で、残高に応じて報酬が自動計算されます。', ng:'❌ 不正解。DUSDはウォレットに保有しているだけで利回りが発生する設計です。「預ける」ではなく「持つ」こと自体が収益条件です。'}},
-  { questionId:'q02', q:'DUSDの利回りを得るには、別途ステーキングが必要？', choiceA:'A. 必要', choiceB:'B. 不要', answer:'B', fb:{ok:'✅ 正解！DUSDはステーキング型ではなく保有型の設計です。ロック期間なし・アンステーク待ちなし・いつでも使用可能という特徴があります。', ng:'❌ 不正解。DUSDはステーキング不要の保有型設計です。流動性を維持したまま利回りを得られる点が特徴です。'}},
-  { questionId:'q03', q:'DUSDの主な報酬源はインフレ（新規発行）である？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'B', fb:{ok:'✅ 正解！主な収益源はステーキング報酬（ETH/SOLなど）とPerpsのFunding Fee（特にショート側）です。市場参加者の活動に依存します。', ng:'❌ 不正解。主な収益源はステーキング報酬とFunding Feeです。インフレによる希薄化ではなく、市場活動から生まれる収益です。'}},
-  { questionId:'q04', q:'DUSDは市場中立的な仕組みで運用されている？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'A', fb:{ok:'✅ 正解！現物資産を保有しつつ同額のショートを建てることで価格変動をヘッジしています。価格上昇・下落のどちらにも偏らない構造です。', ng:'❌ 不正解。DUSDは現物+同額ショートでヘッジされた市場中立的な設計です。ただし完全無リスクではありません。'}},
-  { questionId:'q05', q:'DUSDは入手方法によって報酬計算が変わる？', choiceA:'A. 変わる', choiceB:'B. 基本的に変わらない', answer:'B', fb:{ok:'✅ 正解！ミント・DEX購入・送金など取得方法は関係ありません。「どの経路で得たか」ではなく「どれだけ保有しているか」が基準です。', ng:'❌ 不正解。入手方法は問われません。現在の保有残高が報酬計算の基準になります。'}},
-  { questionId:'q06', q:'DUSDを精算前に手放すと、報酬が受け取れない可能性がある？', choiceA:'A. ある', choiceB:'B. ない', answer:'A', fb:{ok:'✅ 正解！報酬は7日ごとのYielding Circleで計算されます。途中で売却・送金を行うと、そのサイクル分の報酬に影響します。', ng:'❌ 不正解。報酬計算タイミング（Yielding Circle）での保有が重要です。途中で手放すとそのサイクル分を受け取れない可能性があります。'}},
-  { questionId:'q07', q:'DUSDの償還は即時に完了する？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'B', fb:{ok:'✅ 正解！償還には約7日間のロック期間があります。即時性を優先する場合はマーケット売却、価格安定性を優先する場合は償還を使い分けます。', ng:'❌ 不正解。償還には約7日間が必要です。即時性が必要な場合はマーケット売却を使います。'}},
-  { questionId:'q08', q:'StandXはPerps DEXであり、DUSDを証拠金として利用できる？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'A', fb:{ok:'✅ 正解！DUSDはそのまま証拠金として使用可能です。「利回り資産」と「トレード資金」が統合されており、資金移動なしでそのままトレードに使えます。', ng:'❌ 不正解。DUSDはStandXでそのまま証拠金として使えます。利回りを受け取りながら同時にトレードに活用できる点が特徴です。'}},
-  { questionId:'q09', q:'ポジションを開くとDUSDの利回りは止まる？', choiceA:'A. 止まる', choiceB:'B. 止まらない', answer:'B', fb:{ok:'✅ 正解！DUSDは証拠金として使っていても利回りが継続します。さらに条件を満たすとPosition Yield（SIP-2）が追加されます。', ng:'❌ 不正解。DUSDの利回りはポジション中も継続します。1つの資本が複数の収益レイヤーで同時に機能します。'}},
-  { questionId:'q10', q:'Position Yield（SIP-2）はすべてのポジションに付与される？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'B', fb:{ok:'✅ 正解！対象は条件（最小保有時間・リスク状態・対象マーケット等）を満たしたポジションのみです。単なるエントリーではなく「健全に維持されたポジション」が評価されます。', ng:'❌ 不正解。Position Yieldには複数の条件があります。有効なポジション・最小保有時間・リスク状態・対象マーケットなどを満たす必要があります。'}},
-  { questionId:'q11', q:'SIP-2は取引回数を増やすほど有利な仕組みである？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'B', fb:{ok:'✅ 正解！評価対象は回数ではなく時間です。どれだけ継続してポジションを維持しているかが重要で、短期売買では評価されません。', ng:'❌ 不正解。SIP-2は回数ではなく時間を評価します。ポジションの継続維持が重要で、高頻度売買は対象外です。'}},
-  { questionId:'q12', q:'SIP-2は清算ルールや証拠金仕様を変更する？', choiceA:'A. 変更する', choiceB:'B. 変更しない', answer:'B', fb:{ok:'✅ 正解！Execution・Liquidation・Margin仕様はそのままです。報酬が追加されるだけで、リスク自体が軽減されるわけではありません。', ng:'❌ 不正解。SIP-2は既存のリスク仕様を変更しません。通常のトレードリスクはそのまま維持されます。'}},
-  { questionId:'q13', q:'Block Tradeで開いたポジションも、Position Yield（SIP-2）の対象になる？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'A', fb:{ok:'✅ 正解！Position Yieldの評価対象は「ポジションの状態」であり、マーケット注文・指値・Block Tradeなどエントリー方法は問いません。条件を満たした有効なポジションであることが評価基準です。', ng:'❌ 不正解。Position Yieldはエントリー方法ではなくポジションの状態で判断されます。Block Tradeも条件を満たせば対象になります。'}},
-  { questionId:'q14', q:'Position Yield（SIP-2）の原資は、清算時に発生するペナルティが中心である？', choiceA:'A. 含まれる', choiceB:'B. 原則含まれない', answer:'B', fb:{ok:'✅ 正解！主な原資は取引手数料（Fees）やFundingなどの通常の取引活動です。清算ペナルティや保険基金への流入などの一時的・例外的収益は基本的な原資としては扱われません。', ng:'❌ 不正解。Position Yieldの原資は通常の市場活動（手数料・Funding等）が中心です。清算ペナルティは原則含まれません。'}},
-  { questionId:'q15', q:'SIP-3は、DUSDと取引手数料の関係を強める提案である？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'A', fb:{ok:'✅ 正解！Perpsの取引手数料の一部をDUSD側に分配することで、取引量増加と利回り増加が連動する設計です（現時点は提案段階）。', ng:'❌ 不正解。SIP-3は手数料の一部をDUSD利回りに回す提案です。市場活動と利回りがより直接的に結びつきます。'}},
-  { questionId:'q16', q:'SIP-3は、DUSD保有者全体への分配を想定している？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'A', fb:{ok:'✅ 正解！DUSDを保有しているだけで分配対象になる設計です。トレードしていないユーザーでも間接的に市場活動の恩恵を受けられます。', ng:'❌ 不正解。SIP-3はDUSD保有者全体への分配を想定しています。トレードの有無に関わらず保有者が対象です。'}},
-  { questionId:'q17', q:'Maker Pointsは未約定の指値注文でも獲得できる？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'A', fb:{ok:'✅ 正解！評価対象は「約定」ではなく「流動性提供」です。板に注文を置き続けることで市場に価値を提供していると判断されます。', ng:'❌ 不正解。Maker Pointsは約定ではなく板への注文配置が評価されます。未約定でも流動性提供として認められます。'}},
-  { questionId:'q18', q:'Maker Pointsは注文を出した瞬間に発生する？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'B', fb:{ok:'✅ 正解！一定時間オーダーブックに残る必要があります。ミッド価格との距離・注文サイズ・配置の質も評価に影響します。', ng:'❌ 不正解。Maker Pointsは注文を出した瞬間ではなく、一定時間板に残ることで発生します。配置の質も評価されます。'}},
-  { questionId:'q19', q:'StandXはVC資金に依存したプロジェクトである？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'B', fb:{ok:'✅ 正解！StandXはself-funded / community-driven寄りの構造とされています。短期的なトークンインセンティブではなくプロダクト設計を重視する方向性です。', ng:'❌ 不正解。StandXはVC非依存のself-funded構造です。プロダクト設計そのものに価値の源泉を置いています。'}},
-  { questionId:'q20', q:'StandXの本質は「高APYを提供すること」にある？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'B', fb:{ok:'✅ 正解！StandXはDUSD保有・ポジション維持・流動性提供という複数の行動を通じて価値を生みます。単一のAPYではなく「資本がどう働いているか」という構造で理解することが重要です。', ng:'❌ 不正解。StandXの本質は複合的な資本活用の設計にあります。DUSD保有・ポジション・流動性提供が連動する構造が特徴です。'}}
+  { questionId:'q01', q:'DUSDは、保有しているだけで利回りが発生する？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'A', fb:{ok:'✅ 正解！DUSDはウォレットに保有しているだけで利回りが発生する設計です。ステーキングやロック操作は不要で、残高に応じて報酬が自動計算されます。→「預ける」ではなく「持つ」こと自体が収益条件であり、資金の移動や管理コストが発生しない点が特徴です。', ng:'❌ 不正解。DUSDはウォレットに保有しているだけで利回りが発生する設計です。「預ける」ではなく「持つ」こと自体が収益条件です。'}},
+  { questionId:'q02', q:'DUSDの利回りを得るには、別途ステーキングが必要？', choiceA:'A. 必要', choiceB:'B. 不要', answer:'B', fb:{ok:'✅ 正解！DUSDはステーキング型ではなく保有型の設計です。ロック期間なし・アンステーク待ちなし・いつでも使用可能という特徴があります。→流動性を維持したまま利回りを得られる点が、従来のDeFiとの大きな違いです。', ng:'❌ 不正解。DUSDはステーキング不要の保有型設計です。流動性を維持したまま利回りを得られる点が特徴です。'}},
+  { questionId:'q03', q:'DUSDの主な報酬源はインフレ（新規発行）である？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'B', fb:{ok:'✅ 正解！主な収益源はステーキング報酬（ETH/SOLなど）とPerpsのFunding Fee（特にショート側）です。→市場参加者の活動に依存するため、出来高やFunding状況によって利回りは変動します。取引手数料はSIP-3でより強く接続される方向です。', ng:'❌ 不正解。主な収益源はステーキング報酬とFunding Feeです。インフレによる希薄化ではなく、市場活動から生まれる収益です。'}},
+  { questionId:'q04', q:'DUSDは市場中立的な仕組みで運用されている？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'A', fb:{ok:'✅ 正解！現物資産を保有しつつ同額のショートポジションを建てることで価格変動をヘッジしています。→価格上昇・下落のどちらにも偏らない構造です。ただしFundingの逆転やヘッジコスト増加により利回りは影響を受けます。', ng:'❌ 不正解。DUSDは現物+同額ショートでヘッジされた市場中立的な設計です。ただし完全無リスクではありません。'}},
+  { questionId:'q05', q:'DUSDは入手方法によって報酬計算が変わる？', choiceA:'A. 変わる', choiceB:'B. 基本的に変わらない', answer:'B', fb:{ok:'✅ 正解！ミント・DEX購入・送金など取得方法は関係ありません。→「どの経路で得たか」ではなく「どれだけ保有しているか」が基準です。途中で入手した場合でも次のサイクルから通常通り計算対象になります。', ng:'❌ 不正解。入手方法は問われません。現在の保有残高が報酬計算の基準になります。'}},
+  { questionId:'q06', q:'DUSDを精算前に手放すと、報酬が受け取れない可能性がある？', choiceA:'A. ある', choiceB:'B. ない', answer:'A', fb:{ok:'✅ 正解！報酬は7日ごとのYielding Circleで計算されます。途中で売却・送金を行うと、そのサイクル分の報酬に影響します。→「保有していた時間」と「タイミング」が重要になります。', ng:'❌ 不正解。報酬計算タイミング（Yielding Circle）での保有が重要です。途中で手放すとそのサイクル分を受け取れない可能性があります。'}},
+  { questionId:'q07', q:'DUSDの償還は即時に完了する？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'B', fb:{ok:'✅ 正解！償還には約7日間のロック期間があります。即時性を優先する場合はマーケット売却、価格安定性を優先する場合は償還を使い分けます。→流動性と確実性のトレードオフが存在します。', ng:'❌ 不正解。償還には約7日間が必要です。即時性が必要な場合はマーケット売却を使います。'}},
+  { questionId:'q08', q:'StandXはPerps DEXであり、DUSDを証拠金として利用できる？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'A', fb:{ok:'✅ 正解！DUSDはそのまま証拠金として使用可能です。通常は「利回り資産」と「トレード資金」が分かれますが、StandXでは統合されています。→資金移動なしでそのままトレードに使える点が特徴です。', ng:'❌ 不正解。DUSDはStandXでそのまま証拠金として使えます。利回りを受け取りながら同時にトレードに活用できる点が特徴です。'}},
+  { questionId:'q09', q:'ポジションを開くとDUSDの利回りは止まる？', choiceA:'A. 止まる', choiceB:'B. 止まらない', answer:'B', fb:{ok:'✅ 正解！DUSDは証拠金として使っていても利回りが継続します。さらに条件を満たすとPosition Yield（SIP-2）が追加されます。→1つの資本が複数の収益レイヤーで同時に機能します。', ng:'❌ 不正解。DUSDの利回りはポジション中も継続します。1つの資本が複数の収益レイヤーで同時に機能します。'}},
+  { questionId:'q10', q:'Position Yield（SIP-2）はすべてのポジションに付与される？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'B', fb:{ok:'✅ 正解！対象は条件（最小保有時間・リスク状態・対象マーケット等）を満たしたポジションのみです。→単なるエントリーではなく「健全に維持されたポジション」が評価されます。', ng:'❌ 不正解。Position Yieldには複数の条件があります。有効なポジション・最小保有時間・リスク状態・対象マーケットなどを満たす必要があります。'}},
+  { questionId:'q11', q:'SIP-2は取引回数を増やすほど有利な仕組みである？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'B', fb:{ok:'✅ 正解！評価対象は回数ではなく時間です。→短期売買ではなく、どれだけ市場に残っているか・どれだけ継続してポジションを維持しているかが重要になります。', ng:'❌ 不正解。SIP-2は回数ではなく時間を評価します。ポジションの継続維持が重要で、高頻度売買は対象外です。'}},
+  { questionId:'q12', q:'SIP-2は清算ルールや証拠金仕様を変更する？', choiceA:'A. 変更する', choiceB:'B. 変更しない', answer:'B', fb:{ok:'✅ 正解！Execution・Liquidation・Margin仕様はそのままです。→報酬が追加されるだけで、リスク自体が軽減されるわけではありません。通常のトレードリスクはそのまま維持されます。', ng:'❌ 不正解。SIP-2は既存のリスク仕様を変更しません。通常のトレードリスクはそのまま維持されます。'}},
+  { questionId:'q13', q:'Block Tradeで開いたポジションも、Position Yield（SIP-2）の対象になる？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'A', fb:{ok:'✅ 正解！Position Yieldの評価対象は「ポジションの状態」であり、マーケット注文・指値注文・Block Tradeなどのエントリー方法は問いません。→どの方法で入ったかではなく、ポジションが条件を満たしているかが評価基準になります。', ng:'❌ 不正解。Position Yieldはエントリー方法ではなくポジションの状態で判断されます。Block Tradeも条件を満たせば対象になります。'}},
+  { questionId:'q14', q:'Position Yield（SIP-2）の原資は、清算時に発生するペナルティが中心である？', choiceA:'A. 含まれる', choiceB:'B. 原則含まれない', answer:'B', fb:{ok:'✅ 正解！主な原資は取引手数料（Fees）やFundingなどの通常の取引活動です。清算ペナルティや保険基金への流入などの一時的な収益は基本的な原資とは異なります。→継続的な市場活動に基づく収益がベースとなっています。', ng:'❌ 不正解。Position Yieldの原資は通常の市場活動（手数料・Funding等）が中心です。清算ペナルティは原則含まれません。'}},
+  { questionId:'q15', q:'SIP-3は、DUSDと取引手数料の関係を強める提案である？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'A', fb:{ok:'✅ 正解！Perpsの取引手数料の一部をDUSD側に分配することで、取引量増加と利回り増加が連動する設計です。→市場活動と利回りがより直接的に結びつきます（現時点は提案段階）。', ng:'❌ 不正解。SIP-3は手数料の一部をDUSD利回りに回す提案です。市場活動と利回りがより直接的に結びつきます。'}},
+  { questionId:'q16', q:'SIP-3は、DUSD保有者全体への分配を想定している？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'A', fb:{ok:'✅ 正解！DUSDを保有しているだけで分配対象になる設計です。→トレードしていないユーザーでも、間接的に市場活動の恩恵を受ける構造です。', ng:'❌ 不正解。SIP-3はDUSD保有者全体への分配を想定しています。トレードの有無に関わらず保有者が対象です。'}},
+  { questionId:'q17', q:'Maker Pointsは未約定の指値注文でも獲得できる？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'A', fb:{ok:'✅ 正解！評価対象は「約定」ではなく「流動性提供」です。→板に注文を置き続けることで、市場に対して価値を提供していると判断されます。', ng:'❌ 不正解。Maker Pointsは約定ではなく板への注文配置が評価されます。未約定でも流動性提供として認められます。'}},
+  { questionId:'q18', q:'Maker Pointsは注文を出した瞬間に発生する？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'B', fb:{ok:'✅ 正解！一定時間オーダーブックに残る必要があります。さらにミッド価格との距離・注文サイズ・配置の質も評価に影響します。→実質的に市場の流動性を改善する注文が評価されます。', ng:'❌ 不正解。Maker Pointsは注文を出した瞬間ではなく、一定時間板に残ることで発生します。配置の質も評価されます。'}},
+  { questionId:'q19', q:'StandXはVC資金に依存したプロジェクトである？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'B', fb:{ok:'✅ 正解！StandXはself-funded / community-driven寄りの構造とされています。→短期的なトークンインセンティブではなく、プロダクト設計を重視する方向性です。', ng:'❌ 不正解。StandXはVC非依存のself-funded構造です。プロダクト設計そのものに価値の源泉を置いています。'}},
+  { questionId:'q20', q:'StandXの本質は「高APYを提供すること」にある？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'B', fb:{ok:'✅ 正解！StandXはDUSD保有・ポジション維持・流動性提供という複数の行動を通じて価値を生みます。→単一のAPYではなく、「資本がどのように働いているか」という構造で理解することが重要です。', ng:'❌ 不正解。StandXの本質は複合的な資本活用の設計にあります。DUSD保有・ポジション・流動性提供が連動する構造が特徴です。'}}
 ];
 
 // =============================================================================
