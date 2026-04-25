@@ -511,6 +511,14 @@ body::before{
   font-size:12.5px;
   line-height:1.85;
 }
+.summary-body{
+  color:var(--text-sub);
+  font-size:12.5px;
+  line-height:1.85;
+  margin-bottom:.75rem;
+}
+.summary-body:last-child{margin-bottom:0}
+.summary-body strong{color:var(--text);font-weight:600}
 
 /* Error & note */
 .error-box{
@@ -651,6 +659,27 @@ body::before{
         </ol>
       </div>
 
+      <div class="summary-box">
+        <div class="summary-title">StandXの構造を理解する</div>
+        <p class="summary-body">StandXでは、利回りは独立した機能ではなく、市場構造の一部として組み込まれています。</p>
+        <p class="summary-body">一般的な環境では、利回りを得る資本・トレードに使う資本・流動性提供に使う資本は分離され、それぞれが別の役割として扱われます。その結果、どれかを選ぶと他の機能は止まる構造になります。</p>
+        <p class="summary-body">一方でStandXでは、DUSDという単一の資本が<br>
+          ・保有による利回り<br>
+          ・ポジション維持による価値（Position Yield）<br>
+          ・流動性提供による評価（Maker）<br>
+          といった複数のレイヤーで同時に機能します。</p>
+        <p class="summary-body">さらに利回りは<br>
+          ・ステーキング報酬<br>
+          ・PerpsのFunding<br>
+          ・（拡張として）取引手数料<br>
+          といった市場活動に直接紐づいており、ポジションの時間や取引量とも連動します。</p>
+        <p class="summary-body">その結果、<br>
+          <strong>市場活動 → 収益発生 → DUSD利回り → 資本増加 → 市場参加の継続</strong><br>
+          という循環が成立します。</p>
+        <p class="summary-body">ただしこの構造は、出来高やFunding環境に依存するため、利回りは固定ではなく変動します。</p>
+        <p class="summary-body">つまりStandXは単なる高利回りプロダクトではなく、<strong>資本の使い方を再設計し、市場参加と収益を一体化させた構造を持つプロトコル</strong>です。</p>
+      </div>
+
       <div class="lottery-box">
         <div class="lottery-label">あなたの宝くじ番号</div>
         <div class="lottery-digits" id="lottery-digits"></div>
@@ -689,12 +718,12 @@ const IS_PRODUCTION = MODE === 'production';
 // =============================================================================
 // 設定値 ★ 本番リリース前に全て実際の値に差し替えること
 // =============================================================================
-const GAS_URL    = 'https://script.google.com/macros/s/AKfycbzkPSdwFle2xjlvxtvbRO2RSpNflIWnGTLT4viZZWxmHlfilaflAWJQA9so21Ztzzv5/exec';
-const API_SECRET = 'standx-quiz_2604';
-const FORM_URL   = 'https://docs.google.com/forms/d/e/1FAIpQLSfw8lRi39Xi_TzB7pkbDMSuNiWJF0L5EuegGSKhI6c604NL_w/viewform';
-const FORM_NAME  = '193971166';
-const FORM_SCORE = '1874635056';
-const FORM_NUM   = '677367887';
+const GAS_URL    = 'YOUR_GAS_DEPLOY_URL';
+const API_SECRET = 'YOUR_API_SECRET';
+const FORM_URL   = 'YOUR_FORM_URL';
+const FORM_NAME  = 'YOUR_NAME_FIELD';
+const FORM_SCORE = 'YOUR_SCORE_FIELD';
+const FORM_NUM   = 'YOUR_NUMBER_FIELD';
 
 // =============================================================================
 // 設定チェック
@@ -734,8 +763,8 @@ const QS = [
   { questionId:'q10', q:'Position Yield（SIP-2）はすべてのポジションに付与される？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'B', fb:{ok:'✅ 正解！対象は条件（最小保有時間・リスク状態・対象マーケット等）を満たしたポジションのみです。単なるエントリーではなく「健全に維持されたポジション」が評価されます。', ng:'❌ 不正解。Position Yieldには複数の条件があります。有効なポジション・最小保有時間・リスク状態・対象マーケットなどを満たす必要があります。'}},
   { questionId:'q11', q:'SIP-2は取引回数を増やすほど有利な仕組みである？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'B', fb:{ok:'✅ 正解！評価対象は回数ではなく時間です。どれだけ継続してポジションを維持しているかが重要で、短期売買では評価されません。', ng:'❌ 不正解。SIP-2は回数ではなく時間を評価します。ポジションの継続維持が重要で、高頻度売買は対象外です。'}},
   { questionId:'q12', q:'SIP-2は清算ルールや証拠金仕様を変更する？', choiceA:'A. 変更する', choiceB:'B. 変更しない', answer:'B', fb:{ok:'✅ 正解！Execution・Liquidation・Margin仕様はそのままです。報酬が追加されるだけで、リスク自体が軽減されるわけではありません。', ng:'❌ 不正解。SIP-2は既存のリスク仕様を変更しません。通常のトレードリスクはそのまま維持されます。'}},
-  { questionId:'q13', q:'Block Tradeで開いたポジションも条件次第で対象になる？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'A', fb:{ok:'✅ 正解！評価対象はポジションの状態です。マーケット注文・指値・Block Tradeなど入り方は問われません。', ng:'❌ 不正解。Block Tradeを含め、入り方は問いません。結果のポジションの状態が評価されます。'}},
-  { questionId:'q14', q:'Position Yieldの原資には清算ペナルティが含まれる？', choiceA:'A. 含まれる', choiceB:'B. 原則含まれない', answer:'B', fb:{ok:'✅ 正解！主な原資は取引手数料やFundingなどの通常の取引活動です。一時的なイベント収益ではなく継続的な市場活動に基づいています。', ng:'❌ 不正解。Position Yieldの原資は通常の取引活動（手数料・Funding等）が中心です。清算ペナルティは原則含まれません。'}},
+  { questionId:'q13', q:'Block Tradeで開いたポジションも、Position Yield（SIP-2）の対象になる？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'A', fb:{ok:'✅ 正解！Position Yieldの評価対象は「ポジションの状態」であり、マーケット注文・指値・Block Tradeなどエントリー方法は問いません。条件を満たした有効なポジションであることが評価基準です。', ng:'❌ 不正解。Position Yieldはエントリー方法ではなくポジションの状態で判断されます。Block Tradeも条件を満たせば対象になります。'}},
+  { questionId:'q14', q:'Position Yield（SIP-2）の原資は、清算時に発生するペナルティが中心である？', choiceA:'A. 含まれる', choiceB:'B. 原則含まれない', answer:'B', fb:{ok:'✅ 正解！主な原資は取引手数料（Fees）やFundingなどの通常の取引活動です。清算ペナルティや保険基金への流入などの一時的・例外的収益は基本的な原資としては扱われません。', ng:'❌ 不正解。Position Yieldの原資は通常の市場活動（手数料・Funding等）が中心です。清算ペナルティは原則含まれません。'}},
   { questionId:'q15', q:'SIP-3は、DUSDと取引手数料の関係を強める提案である？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'A', fb:{ok:'✅ 正解！Perpsの取引手数料の一部をDUSD側に分配することで、取引量増加と利回り増加が連動する設計です（現時点は提案段階）。', ng:'❌ 不正解。SIP-3は手数料の一部をDUSD利回りに回す提案です。市場活動と利回りがより直接的に結びつきます。'}},
   { questionId:'q16', q:'SIP-3は、DUSD保有者全体への分配を想定している？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'A', fb:{ok:'✅ 正解！DUSDを保有しているだけで分配対象になる設計です。トレードしていないユーザーでも間接的に市場活動の恩恵を受けられます。', ng:'❌ 不正解。SIP-3はDUSD保有者全体への分配を想定しています。トレードの有無に関わらず保有者が対象です。'}},
   { questionId:'q17', q:'Maker Pointsは未約定の指値注文でも獲得できる？', choiceA:'A. はい', choiceB:'B. いいえ', answer:'A', fb:{ok:'✅ 正解！評価対象は「約定」ではなく「流動性提供」です。板に注文を置き続けることで市場に価値を提供していると判断されます。', ng:'❌ 不正解。Maker Pointsは約定ではなく板への注文配置が評価されます。未約定でも流動性提供として認められます。'}},
@@ -959,7 +988,7 @@ async function startQuiz() {
         buildQuiz(answers.some(a => a !== null));
         show('s-quiz');
       } else {
-        alert('このクイズは既に別の端末で開始されています。\n最初に参加した端末・ブラウザから続きをお進みください。\n\n解決しない場合は運営にご連絡ください。');
+        alert('このクイズは既に別の端末で開始されています。\n最初に参加した端末・ブラウザから続きをお進みください。\n\n解決しない場合はLINEオープンチャットで運営にご連絡ください。');
       }
     } else if (code === 'http_error') {
       alert('通信に失敗しました。インターネット接続を確認して、もう一度お試しください。');
@@ -1185,9 +1214,9 @@ async function issueLotteryNumber() {
       formBtn.disabled = true;
       helpEl.style.display = 'block';
       if (code === 'lock_timeout' || code === 'json_error' || code === 'http_error') {
-        helpEl.textContent = '時間をおいて再試行してください。解決しない場合は、運営にご連絡ください。';
+        helpEl.textContent = '時間をおいて再試行してください。解決しない場合は、LINEオープンチャットで運営にご連絡ください。';
       } else {
-        helpEl.textContent = '再試行しても解決しない場合は、運営にご連絡ください。';
+        helpEl.textContent = '再試行しても解決しない場合は、LINEオープンチャットで運営にご連絡ください。';
       }
     }
   }
