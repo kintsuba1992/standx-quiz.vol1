@@ -1131,7 +1131,7 @@ function ans(i, choice) {
 saveState();
   restoreAnswer(i, choice);
   updateProgress();
-  if (answers.every(a => a !== null)) {    ← ここから置き換え
+  if (answers.every(a => a !== null)) {
     showSubmit();
   } else {
     const next = document.getElementById('qcard-' + (i + 1))?.closest('.q-section');
