@@ -625,7 +625,7 @@ body::before{
         <div class="logged-dot"></div>
         <div class="logged-text" id="logged-email"></div>
       </div>
-      <label class="field-label" for="line-name">ニックネーム</label>
+      <label class="field-label" for="line-name">LINEオープンチャットのニックネーム</label>
       <input class="text-input" id="line-name" type="text" placeholder="コミュニティでのお名前" maxlength="30" oninput="checkName()"/>
       <button class="primary-btn" id="start-btn" onclick="startQuiz()" disabled>クイズをスタート →</button>
     </div>
@@ -721,7 +721,7 @@ body::before{
 // 'test'       : 擬似ログイン・テストデータ有効
 // 'production' : 本番モード
 // =============================================================================
-const MODE = 'production'; // ★ テスト時は 'test' に変更 本番は'production'
+const MODE = 'production'; // ★ テスト時は 'test' に変更
 
 const IS_PRODUCTION = MODE === 'production';
 
@@ -731,9 +731,9 @@ const IS_PRODUCTION = MODE === 'production';
 const GAS_URL    = 'https://script.google.com/macros/s/AKfycbzkPSdwFle2xjlvxtvbRO2RSpNflIWnGTLT4viZZWxmHlfilaflAWJQA9so21Ztzzv5/exec';
 const API_SECRET = 'standx-quiz_2604';
 const FORM_URL   = 'https://docs.google.com/forms/d/e/1FAIpQLSfw8lRi39Xi_TzB7pkbDMSuNiWJF0L5EuegGSKhI6c604NL_w/viewform';
-const FORM_NAME  = 'entry.193971166';
-const FORM_SCORE = 'entry.1874635056';
-const FORM_NUM   = 'entry.677367887';
+const FORM_NAME  = '193971166';
+const FORM_SCORE = '1874635056';
+const FORM_NUM   = '677367887';
 
 // =============================================================================
 // 設定チェック
@@ -998,7 +998,7 @@ async function startQuiz() {
         buildQuiz(answers.some(a => a !== null));
         show('s-quiz');
       } else {
-        alert('このクイズは既に別の端末で開始されています。\n最初に参加した端末・ブラウザから続きをお進みください。\n\n解決しない場合は運営にご連絡ください。');
+        alert('このクイズは既に別の端末で開始されています。\n最初に参加した端末・ブラウザから続きをお進みください。\n\n解決しない場合はLINEオープンチャットで運営にご連絡ください。');
       }
     } else if (code === 'http_error') {
       alert('通信に失敗しました。インターネット接続を確認して、もう一度お試しください。');
@@ -1044,7 +1044,7 @@ function buildQuiz(isResume) {
     const section = document.createElement('div'); section.className = 'q-section';
     const card    = document.createElement('div'); card.className = 'q-card'; card.id = 'qcard-'+i;
     const numEl   = document.createElement('div'); numEl.className = 'q-num';
-    numEl.textContent = 'Q' + String(i+1).padStart(2,'0');
+    numEl.textContent = 'Q.' + (i+1) + ' / ' + QS.length;
     const textEl  = document.createElement('div'); textEl.className = 'q-text'; textEl.textContent = q.q;
 
     // 覗きキャラ（未回答時のみ表示）
@@ -1077,13 +1077,17 @@ function buildQuiz(isResume) {
   updateProgress();
 
   if (isResume) {
+    // 最後に回答した問題まで復元し、その問題だけ表示
+    const lastAnsweredIdx = answers.reduce((last, a, i) => a !== null ? i : last, -1);
     answers.forEach((choice, i) => { if (choice !== null) restoreAnswer(i, choice); });
-    const lastAnswered = answers.lastIndexOf(null);
-    const showUpTo = lastAnswered === -1 ? QS.length - 1 : lastAnswered;
     document.querySelectorAll('.q-section').forEach((el, i) => {
-      if (i > showUpTo) el.classList.add('hidden');
+      if (i !== lastAnsweredIdx + 1) el.classList.add('hidden');
     });
-    if (answers.every(a => a !== null)) showSubmit();
+    // 全問回答済みなら結果表示
+    if (answers.every(a => a !== null)) {
+      document.querySelectorAll('.q-section').forEach(el => el.classList.add('hidden'));
+      showSubmit();
+    }
   } else {
     document.querySelectorAll('.q-section').forEach((el, i) => {
       if (i > 0) el.classList.add('hidden');
@@ -1120,6 +1124,32 @@ function restoreAnswer(i, choice) {
     }
   }
   fb.style.display = 'block';
+
+  // 「次へ」ボタンを表示（最終問題以外）
+  const card = document.getElementById('qcard-'+i);
+  const existingBtn = card.querySelector('.next-btn');
+  if (!existingBtn) {
+    const isLast = (i === QS.length - 1);
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'primary-btn next-btn';
+    nextBtn.style.marginTop = '.75rem';
+    nextBtn.textContent = isLast ? '結果を見る →' : '次の問題へ →';
+    nextBtn.addEventListener('click', () => {
+      if (isLast) {
+        showSubmit();
+      } else {
+        // 現在の問題を隠して次を表示
+        const currentSection = card.closest('.q-section');
+        currentSection.classList.add('hidden');
+        const next = document.getElementById('qcard-'+(i+1))?.closest('.q-section');
+        if (next) {
+          next.classList.remove('hidden');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+    });
+    card.appendChild(nextBtn);
+  }
 }
 
 function ans(i, choice) {
@@ -1131,15 +1161,6 @@ function ans(i, choice) {
 saveState();
   restoreAnswer(i, choice);
   updateProgress();
-  if (answers.every(a => a !== null)) {
-    showSubmit();
-  } else {
-    const next = document.getElementById('qcard-' + (i + 1))?.closest('.q-section');
-    if (next) {
-      next.classList.remove('hidden');
-      setTimeout(() => next.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-    }
-  }
 }
 // =============================================================================
 // 結果画面
@@ -1240,9 +1261,9 @@ async function issueLotteryNumber() {
       formBtn.disabled = true;
       helpEl.style.display = 'block';
       if (code === 'lock_timeout' || code === 'json_error' || code === 'http_error') {
-        helpEl.textContent = '時間をおいて再試行してください。解決しない場合は、運営にご連絡ください。';
+        helpEl.textContent = '時間をおいて再試行してください。解決しない場合は、LINEオープンチャットで運営にご連絡ください。';
       } else {
-        helpEl.textContent = '再試行しても解決しない場合は、運営にご連絡ください。';
+        helpEl.textContent = '再試行しても解決しない場合は、LINEオープンチャットで運営にご連絡ください。';
       }
     }
   }
