@@ -65,7 +65,7 @@ body::before{
 }
 .header-sub{
   text-align:center;
-  font-size:12px;
+  font-size:18px;
   color:var(--text-dim);
   line-height:1.7;
   margin-bottom:1.5rem;
@@ -551,6 +551,7 @@ body::before{
   background:var(--border);
   margin:1rem 0;
 }
+.q-section.hidden { display: none; }
 </style>
 </head>
 <body>
@@ -561,8 +562,10 @@ body::before{
 
   <!-- サブタイトル -->
   <div class="header-sub">
-    StandXの設計思想を理解することが、資本を最大限に活かす第一歩。<br>
-    <span>保有・ポジション・流動性提供——あなたの資本は、今どれだけ働いていますか？</span>
+    StandXの設計思想を理解することが、<br>
+    資本を最大限に活かす第一歩。<br>
+    <span>保有・ポジション・流動性提供</span><br>
+    <span>——あなたの資本は、今どれだけ働いていますか？——</span>
   </div>
 
   <!-- TEST MODE バナー -->
@@ -1075,7 +1078,16 @@ function buildQuiz(isResume) {
 
   if (isResume) {
     answers.forEach((choice, i) => { if (choice !== null) restoreAnswer(i, choice); });
+    const lastAnswered = answers.lastIndexOf(null);
+    const showUpTo = lastAnswered === -1 ? QS.length - 1 : lastAnswered;
+    document.querySelectorAll('.q-section').forEach((el, i) => {
+      if (i > showUpTo) el.classList.add('hidden');
+    });
     if (answers.every(a => a !== null)) showSubmit();
+  } else {
+    document.querySelectorAll('.q-section').forEach((el, i) => {
+      if (i > 0) el.classList.add('hidden');
+    });
   }
 }
 
@@ -1116,12 +1128,19 @@ function ans(i, choice) {
   const q = QS[i], ok = choice === q.answer;
   if (ok) score++;
   answerLogs.push({ questionId:q.questionId, selectedAnswer:choice, correctAnswer:q.answer, isCorrect:ok, answeredAt:new Date().toISOString() });
-  saveState();
+saveState();
   restoreAnswer(i, choice);
   updateProgress();
-  if (answers.every(a => a !== null)) showSubmit();
+  if (answers.every(a => a !== null)) {    ← ここから置き換え
+    showSubmit();
+  } else {
+    const next = document.getElementById('qcard-' + (i + 1))?.closest('.q-section');
+    if (next) {
+      next.classList.remove('hidden');
+      setTimeout(() => next.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+  }
 }
-
 // =============================================================================
 // 結果画面
 // =============================================================================
