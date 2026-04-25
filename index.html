@@ -349,7 +349,21 @@ body::before{
 }
 .fb-box.ok .fb-title{color:var(--accent)}
 .fb-box.ng .fb-title{color:var(--wrong)}
-
+.fb-char{
+  width:52px;
+  height:52px;
+  object-fit:contain;
+  float:right;
+  margin:0 0 4px 8px;
+}
+.q-peek{
+  width:36px;
+  height:36px;
+  object-fit:contain;
+  float:right;
+  margin:0 0 4px 6px;
+  opacity:0.55;
+}
 /* ============================================================
    Resume Banner
    ============================================================ */
@@ -583,6 +597,9 @@ body::before{
        ============================================================ -->
   <div id="s-name" class="screen">
     <div class="card">
+      <div class="char-wrap">
+        <img src="IMG_3177.PNG" alt="" class="char-img">
+      </div>
       <div class="step-label">STEP 2 — ニックネームの入力</div>
       <div class="logged-badge">
         <div class="logged-dot"></div>
@@ -672,12 +689,12 @@ const IS_PRODUCTION = MODE === 'production';
 // =============================================================================
 // 設定値 ★ 本番リリース前に全て実際の値に差し替えること
 // =============================================================================
-const GAS_URL    = 'YOUR_GAS_DEPLOY_URL';
-const API_SECRET = 'YOUR_API_SECRET';
-const FORM_URL   = 'YOUR_FORM_URL';
-const FORM_NAME  = 'YOUR_NAME_FIELD';
-const FORM_SCORE = 'YOUR_SCORE_FIELD';
-const FORM_NUM   = 'YOUR_NUMBER_FIELD';
+const GAS_URL    = 'https://script.google.com/macros/s/AKfycbzkPSdwFle2xjlvxtvbRO2RSpNflIWnGTLT4viZZWxmHlfilaflAWJQA9so21Ztzzv5/exec';
+const API_SECRET = 'standx-quiz_2604';
+const FORM_URL   = 'https://docs.google.com/forms/d/e/1FAIpQLSfw8lRi39Xi_TzB7pkbDMSuNiWJF0L5EuegGSKhI6c604NL_w/viewform';
+const FORM_NAME  = '193971166';
+const FORM_SCORE = '1874635056';
+const FORM_NUM   = '677367887';
 
 // =============================================================================
 // 設定チェック
@@ -942,7 +959,7 @@ async function startQuiz() {
         buildQuiz(answers.some(a => a !== null));
         show('s-quiz');
       } else {
-        alert('このクイズは既に別の端末で開始されています。\n最初に参加した端末・ブラウザから続きをお進みください。\n\n解決しない場合はLINEオープンチャットで運営にご連絡ください。');
+        alert('このクイズは既に別の端末で開始されています。\n最初に参加した端末・ブラウザから続きをお進みください。\n\n解決しない場合は運営にご連絡ください。');
       }
     } else if (code === 'http_error') {
       alert('通信に失敗しました。インターネット接続を確認して、もう一度お試しください。');
@@ -991,6 +1008,10 @@ function buildQuiz(isResume) {
     numEl.textContent = 'Q' + String(i+1).padStart(2,'0');
     const textEl  = document.createElement('div'); textEl.className = 'q-text'; textEl.textContent = q.q;
 
+    // 覗きキャラ（未回答時のみ表示）
+    const peekImg = document.createElement('img');
+    peekImg.src = 'IMG_3177.PNG'; peekImg.alt = ''; peekImg.className = 'q-peek'; peekImg.id = 'peek-'+i;
+
     const choices = document.createElement('div'); choices.className = 'choices';
     const btnA = document.createElement('button'); btnA.className = 'choice'; btnA.id = 'br-'+i;
     btnA.textContent = q.choiceA;
@@ -1006,6 +1027,7 @@ function buildQuiz(isResume) {
     fbBox.appendChild(fbTitle); fbBox.appendChild(fbBody);
 
     card.appendChild(numEl);
+    card.appendChild(peekImg);
     card.appendChild(textEl);
     card.appendChild(choices);
     card.appendChild(fbBox);
@@ -1032,10 +1054,23 @@ function restoreAnswer(i, choice) {
     bs.className = 'choice ' + (ok ? 'correct' : 'wrong');
     if (!ok) br.className = 'choice show-correct';
   }
+  // 覗きキャラを非表示
+  const peekEl = document.getElementById('peek-'+i);
+  if (peekEl) peekEl.style.display = 'none';
+
   document.getElementById('fbt-'+i).textContent = ok ? '✅ 正解！' : '❌ 不正解';
   document.getElementById('fbb-'+i).textContent = ok ? q.fb.ok : q.fb.ng;
   const fb = document.getElementById('fb-'+i);
   fb.className = 'fb-box ' + (ok ? 'ok' : 'ng');
+  // 正解時に笑顔キャラを表示
+  if (ok) {
+    const existing = fb.querySelector('.fb-char');
+    if (!existing) {
+      const charEl = document.createElement('img');
+      charEl.src = 'IMG_0612.PNG'; charEl.alt = ''; charEl.className = 'fb-char';
+      fb.insertBefore(charEl, fb.firstChild);
+    }
+  }
   fb.style.display = 'block';
 }
 
@@ -1150,9 +1185,9 @@ async function issueLotteryNumber() {
       formBtn.disabled = true;
       helpEl.style.display = 'block';
       if (code === 'lock_timeout' || code === 'json_error' || code === 'http_error') {
-        helpEl.textContent = '時間をおいて再試行してください。解決しない場合は、LINEオープンチャットで運営にご連絡ください。';
+        helpEl.textContent = '時間をおいて再試行してください。解決しない場合は、運営にご連絡ください。';
       } else {
-        helpEl.textContent = '再試行しても解決しない場合は、LINEオープンチャットで運営にご連絡ください。';
+        helpEl.textContent = '再試行しても解決しない場合は、運営にご連絡ください。';
       }
     }
   }
